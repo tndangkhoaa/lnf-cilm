@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập Quản trị</title>
+  <link rel="stylesheet" href="admin-login.css">
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-box">
+      <h2>Đăng nhập Quản trị</h2>
+      <form id="login-form">
+        <input type="password" id="password" placeholder="Mật khẩu" required />
+        <button type="submit">Đăng nhập</button>
+      </form>
+      <div class="error-message" id="login-error"></div>
+      <p class="info-text">Đăng nhập để quản lý đồ thất lạc</p>
+    </div>
+  </div>
+ <script>
+    // Mật khẩu quản trị
+    const ADMIN_PASSWORD = "admin123";
+
+    // Kiểm tra nếu đã đăng nhập thì chuyển hướng ngay
+    if (localStorage.getItem("isAdminLoggedIn") === "true") {
+      window.location.href = "admin.html";
+    }
+
+    // Lấy các phần tử DOM
+    const loginForm = document.getElementById("login-form");
+    const passwordInput = document.getElementById("password");
+    const errorMessage = document.getElementById("login-error");
+
+    // Xử lý sự kiện khi người dùng đăng nhập
+    loginForm.addEventListener("submit", function(event) {
+      event.preventDefault();  // Ngừng việc gửi form
+
+      const enteredPassword = passwordInput.value;
+
+      // Kiểm tra mật khẩu
+      if (enteredPassword === ADMIN_PASSWORD) {
+        // Lưu trạng thái đăng nhập
+        localStorage.setItem("isAdminLoggedIn", "true");
+
+        // Thông báo đăng nhập thành công
+        errorMessage.textContent = "✅ Đăng nhập thành công! Đang chuyển hướng...";
+        errorMessage.style.color = "green";
+
+        // Chuyển hướng đến trang admin sau 1 giây
+        setTimeout(() => {
+          window.location.href = "admin.html";
+        }, 1000);
+      } else {
+        // Hiển thị thông báo lỗi
+        errorMessage.textContent = "❌ Mật khẩu không đúng!";
+        errorMessage.style.color = "red";
+        
+        // Xóa mật khẩu đã nhập
+        passwordInput.value = "";
+        passwordInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>

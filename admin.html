@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trang Quản Trị - LFLibrary</title>
+    <link rel="stylesheet" href="admin.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <h1>QUẢN LÝ ĐỒ THẤT LẠC</h1>
+</head>
+<body>
+  <!-- Thông báo truy cập không được phép -->
+  <div id="unauthorized-section" class="unauthorized-message">
+    <h2>Truy cập bị từ chối</h2>
+    <p>Bạn không có quyền truy cập vào trang này.</p>
+    <p>Vui lòng đăng nhập qua trang <a href="admin-login.html">đăng nhập quản trị</a> trước.</p>
+  </div>
+
+  <!-- Nội dung quản trị - sẽ hiển thị sau khi đăng nhập -->
+
+
+  <div id="admin-content" style="display: none; width: 100%;">
+    <div class="admin-header">
+      
+    </div>
+    <form id="report-form">
+      <input type="text" id="title" placeholder="Tên đồ vật" required>
+      <input type="text" id="description" placeholder="Mô tả">
+      <input type="text" id="location" placeholder="Nơi nhặt được">
+      <input type="text" id="email" placeholder="Thông tin liên hệ" required>
+      <input type="file" id="image" accept="image/*">
+      <button type="submit">Thêm dữ liệu</button>
+    </form>
+    
+    <table id="admin-items-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tiêu đề</th>
+          <th>Hình ảnh</th>
+          <th>Vị trí</th>
+          <th>Ngày báo cáo</th>
+          <th>Liên hệ</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+            <button class="logout-btn" onclick="
+  // Xóa sessionStorage hoặc localStorage nếu có
+  sessionStorage.clear(); 
+  localStorage.clear(); 
+  
+  // Chuyển hướng về trang đăng nhập
+  window.location.href = 'admin-login.html';">
+  Đăng xuất
+</button>
+      <tbody id="admin-items-list"> </tbody>
+
+    </table>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+
+
+</html>
