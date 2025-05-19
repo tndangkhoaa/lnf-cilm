@@ -1,15 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Khởi tạo Supabase Client
     const SUPABASE_URL = 'https://nrsksqrofooddfsiavot.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yc2tzcXJvZm9vZGRmc2lhdm90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMjc3NjgsImV4cCI6MjA2MjYwMzc2OH0.nMWFx8T4r3o5Nu1RfuX07KhpAOlaoj9QQRxTMv9x-8o';
-  
+
     const { createClient } = supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Kiểm tra trạng thái đăng nhập
     checkLoginStatus();
 
-    // 2. Hàm kiểm tra đăng nhập
     function checkLoginStatus() {
         if (localStorage.getItem("isAdminLoggedIn") === "true") {
             showAdminContent();
@@ -18,31 +15,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Hiển thị nội dung trang admin khi đã đăng nhập
     function showAdminContent() {
         document.getElementById("unauthorized-section").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         loadAdminItems();
     }
 
-    // Hiển thị thông báo không có quyền truy cập
     function showUnauthorizedMessage() {
         document.getElementById("unauthorized-section").style.display = "block";
         document.getElementById("admin-content").style.display = "none";
     }
 
-    // Đăng xuất
     window.logoutAdmin = function () {
         localStorage.removeItem("isAdminLoggedIn");
         location.reload();
     };
 
-    // Hàm tải ảnh lên Supabase Storage
     async function uploadImage(file) {
-        const fileName = Date.now() + "_" + encodeURIComponent(file.name); // Mã hóa URL tên tệp để xử lý ký tự đặc biệt
+        const fileName = Date.now() + "_" + encodeURIComponent(file.name);
         const { data, error } = await supabaseClient
             .storage
-            .from('images')  // Bucket 'images'
+            .from('images')
             .upload(fileName, file);
 
         if (error) {
@@ -50,29 +43,27 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
         }
 
-        // Lấy URL của ảnh đã tải lên
-        const imageUrl = `https://nrsksqrofooddfsiavot.supabase.co/storage/v1/object/public/images/${data.path}`; // Sử dụng data.path thay vì data.Key
+        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${data.path}`;
         return imageUrl;
     }
 
-    // 3. Xử lý Submit Form
     const form = document.getElementById("report-form");
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        // Lấy giá trị từ form
         const formData = {
             title: document.getElementById("title").value,
             description: document.getElementById("description").value,
             location_found: document.getElementById("location").value,
             contact_email: document.getElementById("email").value,
-            image_url: document.getElementById("image").files[0] ? await uploadImage(document.getElementById("image").files[0]) : null,
-            status: "Chưa nhận", // Trạng thái mặc định
-            date_reported: new Date().toISOString() // Thêm ngày giờ hiện tại vào dữ liệu
+            image_url: document.getElementById("image").files[0]
+                ? await uploadImage(document.getElementById("image").files[0])
+                : null,
+            status: "Chưa nhận",
+            date_reported: new Date().toISOString()
         };
 
         try {
-            // Thêm dữ liệu vào Supabase
             const { data, error } = await supabaseClient
                 .from('LFLibrary')
                 .insert([formData])
@@ -82,14 +73,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             alert("Gửi thành công!");
             form.reset();
-            await loadAdminItems(); // Sửa đổi: gọi loadAdminItems thay vì loadItems
+            document.getElementById("update-btn").style.display = "none";
+            loadAdminItems();
         } catch (error) {
             console.error("Lỗi khi gửi dữ liệu:", error);
             alert(`Lỗi: ${error.message}`);
         }
     });
 
-    // Tải dữ liệu từ Supabase
     async function loadAdminItems() {
         try {
             const { data, error } = await supabaseClient
@@ -105,7 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
             data.forEach(item => {
                 const row = document.createElement("tr");
 
-                // Tạo dropdown trạng thái
                 const statusSelect = document.createElement("select");
                 statusSelect.className = "status-dropdown";
                 const statusOptions = ["Chưa nhận", "Đã nhận"];
@@ -118,16 +108,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 statusSelect.addEventListener("change", () => updateStatus(item.id, statusSelect.value));
 
-                // Tạo nút xóa
                 const deleteBtn = document.createElement("button");
                 deleteBtn.textContent = "Xóa";
                 deleteBtn.className = "delete-btn";
                 deleteBtn.onclick = () => deleteItem(item.id);
 
-                // Xử lý ngày báo cáo theo định dạng ngày/tháng/năm
                 const formattedDate = new Date(item.date_reported).toLocaleDateString('vi-VN');
 
-                // Tạo hàng dữ liệu
                 row.innerHTML = `
                     <td>${item.id.slice(0, 5)}...</td>
                     <td>${item.title || 'Không có tiêu đề'}</td>
@@ -138,9 +125,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td class="status-cell"></td>
                     <td class="action-btns"></td>
                 `;
-  
+
                 row.querySelector(".status-cell").appendChild(statusSelect);
                 row.querySelector(".action-btns").appendChild(deleteBtn);
+
+                // Sự kiện khi bấm vào hàng
+                row.addEventListener("click", () => fillFormWithItem(item));
+
                 itemsList.appendChild(row);
             });
         } catch (err) {
@@ -148,8 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Không thể tải dữ liệu: " + err.message);
         }
     }
-  
-    // Cập nhật trạng thái
+
     async function updateStatus(id, status) {
         try {
             const { error } = await supabaseClient
@@ -163,8 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("❌ Không thể cập nhật trạng thái: " + err.message);
         }
     }
-  
-    // Xóa item
+
     async function deleteItem(id) {
         if (!confirm("Bạn có chắc muốn xóa mục này?")) return;
         try {
@@ -180,4 +169,40 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("❌ Không thể xóa: " + err.message);
         }
     }
+
+    function fillFormWithItem(item) {
+        document.getElementById("record-id").value = item.id;
+        document.getElementById("title").value = item.title;
+        document.getElementById("description").value = item.description || '';
+        document.getElementById("location").value = item.location_found;
+        document.getElementById("email").value = item.contact_email;
+        document.getElementById("update-btn").style.display = "inline-block";
+    }
+
+    document.getElementById("update-btn").addEventListener("click", async () => {
+        const id = document.getElementById("record-id").value;
+        if (!id) return alert("❌ Không có dữ liệu để cập nhật");
+
+        const updates = {
+            title: document.getElementById("title").value,
+            description: document.getElementById("description").value,
+            location_found: document.getElementById("location").value,
+            contact_email: document.getElementById("email").value
+        };
+
+        try {
+            const { error } = await supabaseClient
+                .from('LFLibrary')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
+            alert("✅ Cập nhật thành công!");
+            form.reset();
+            document.getElementById("update-btn").style.display = "none";
+            loadAdminItems();
+        } catch (err) {
+            alert("❌ Lỗi cập nhật: " + err.message);
+        }
+    });
 });
